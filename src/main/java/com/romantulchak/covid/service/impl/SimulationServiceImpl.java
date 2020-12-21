@@ -37,10 +37,11 @@ public class SimulationServiceImpl implements SimulationService {
             SimulationDetails simulationDetail = new SimulationDetails(0, 0, numberOfHealthy, 0, 0);
             for (int day = 1; day <= simulation.getDaysOfSimulation(); day++){
                  SimulationDetails simulationDetailsToSave = simulate(simulationDetail, day, simulation);
+
                  simulationDetails.add(simulationDetailsToSave);
-                if(simulationDetailsToSave.getNumberOfInfected() <= 0 || simulationDetailsToSave.getNumberOfHealthyWithoutImmunity() <= 0){
-                    simulationDetailsToSave.setNumberOfHealthyWithImmunity(simulationDetailsToSave.getNumberOfHealthyWithImmunity() + simulationDetailsToSave.getNumberOfInfected());
-                    simulationDetailsToSave.setNumberOfInfected(0);
+                if(simulationDetailsToSave.getNumberOfHealthyWithoutImmunity() <= 0) {
+                    //  simulationDetailsToSave.setNumberOfHealthyWithImmunity(simulationDetailsToSave.getNumberOfHealthyWithImmunity() + simulationDetailsToSave.getNumberOfInfected());
+                    //  simulationDetailsToSave.setNumberOfInfected(0);
                     break;
                 }
             }
@@ -50,21 +51,51 @@ public class SimulationServiceImpl implements SimulationService {
         return new ArrayList<>();
     }
     private SimulationDetails simulate(SimulationDetails details,int day, Simulation simulation){
-        newInfected += simulation.getPersonInfectPerDay();
-        numberOfHealthyWithoutImmunity -= simulation.getPersonInfectPerDay();
-        setDetails(details, day, simulation);
-        if (day % simulation.getDaysToRecovery() == 0){
-            long numberOfInfectedByLastDays = simulation.getPersonInfectPerDay() * simulation.getDaysToRecovery();
-            details.setNumberOfHealthyWithImmunity(details.getNumberOfHealthyWithImmunity() +numberOfInfectedByLastDays);
-            details.setNumberOfInfected(details.getNumberOfInfected() - numberOfInfectedByLastDays);
-            newInfected -= numberOfInfectedByLastDays;
+        if(numberOfHealthyWithoutImmunity < simulation.getPersonInfectPerDay()){
+            long currentNumberOfHealthy = simulation.getPersonInfectPerDay() - (simulation.getPersonInfectPerDay() - numberOfHealthyWithoutImmunity);
+            newInfected += currentNumberOfHealthy;
+            numberOfHealthyWithoutImmunity -= currentNumberOfHealthy;
+        }else {
+            newInfected += simulation.getPersonInfectPerDay();
+            numberOfHealthyWithoutImmunity -= simulation.getPersonInfectPerDay();
         }
-        if(day % simulation.getDaysToDeath() == 0){
+        if(!(day % simulation.getDaysToRecovery() == 0 && day % simulation.getDaysToDeath() == 0)){
+            if (day % simulation.getDaysToRecovery() == 0){
+                setRecovery(details, simulation);
+            }
+            if(day % simulation.getDaysToDeath() == 0){
+                setDeath(details, simulation);
+            }
+        }
+        setDetails(details, day, simulation);
+        return new SimulationDetails(details);
+    }
+
+    private void setRecovery(SimulationDetails details, Simulation simulation) {
+        long numberOfInfectedByLastDays = simulation.getPersonInfectPerDay() * simulation.getDaysToRecovery();
+
+        if(details.getNumberOfInfected() < numberOfInfectedByLastDays){
+            numberOfInfectedByLastDays = numberOfInfectedByLastDays - details.getNumberOfInfected();
+            details.setNumberOfHealthyWithImmunity(details.getNumberOfHealthyWithImmunity() + numberOfInfectedByLastDays);
+            details.setNumberOfInfected(details.getNumberOfInfected() - numberOfInfectedByLastDays);
+        }else {
+            details.setNumberOfHealthyWithImmunity(details.getNumberOfHealthyWithImmunity() + numberOfInfectedByLastDays);
+            details.setNumberOfInfected(details.getNumberOfInfected() - numberOfInfectedByLastDays);
+        }
+        newInfected -= numberOfInfectedByLastDays;
+    }
+
+    private void setDeath(SimulationDetails details, Simulation simulation) {
+        if(details.getNumberOfInfected() < simulation.getMortalityRate()){
+            long numberOfInfected = simulation.getMortalityRate() - (simulation.getMortalityRate() - details.getNumberOfInfected());
+            details.setNumberOfDeath(details.getNumberOfDeath() + numberOfInfected);
+            details.setNumberOfInfected(numberOfInfected);
+            newInfected -= numberOfInfected;
+        }else {
             details.setNumberOfDeath(details.getNumberOfDeath() + simulation.getMortalityRate());
             details.setNumberOfInfected(details.getNumberOfInfected() - simulation.getMortalityRate());
             newInfected -= simulation.getMortalityRate();
         }
-        return new SimulationDetails(details);
     }
 
     private void setDetails(SimulationDetails details, int day, Simulation simulation) {
