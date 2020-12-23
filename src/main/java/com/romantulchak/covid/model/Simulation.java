@@ -31,6 +31,11 @@ public class Simulation {
     private int daysToDeath;
     @JsonView(Views.SimulationFull.class)
     private int daysOfSimulation;
+    @JsonView(Views.SimulationFull.class)
+    private boolean isMask;
+
+    @JsonView(Views.SimulationFull.class)
+    private boolean isDistance;
 
     @OneToMany(mappedBy = "simulation", cascade = CascadeType.ALL)
     @JsonView(Views.SimulationFull.class)
@@ -118,5 +123,21 @@ public class Simulation {
 
     public void setSimulationDetails(List<SimulationDetails> simulationDetails) {
         this.simulationDetails = simulationDetails;
+    }
+
+    public boolean isMask() {
+        return isMask;
+    }
+
+    public void setMask(boolean mask) {
+        isMask = mask;
+    }
+
+    public boolean isDistance() {
+        return isDistance;
+    }
+
+    public void setDistance(boolean distance) {
+        isDistance = distance;
     }
 }

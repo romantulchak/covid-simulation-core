@@ -6,6 +6,9 @@ import com.romantulchak.covid.repository.SimulationDetailsRepository;
 import com.romantulchak.covid.repository.SimulationRepository;
 import com.romantulchak.covid.service.SimulationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,14 +37,12 @@ public class SimulationServiceImpl implements SimulationService {
             long numberOfHealthy = simulation.getPopulation() - simulation.getInitialNumberOfInfected();
             numberOfHealthyWithoutImmunity = numberOfHealthy;
             newInfected = simulation.getInitialNumberOfInfected();
+            additionalSecuritySettings(simulation);
             SimulationDetails simulationDetail = new SimulationDetails(0, 0, numberOfHealthy, 0, 0);
             for (int day = 1; day <= simulation.getDaysOfSimulation(); day++){
                  SimulationDetails simulationDetailsToSave = simulate(simulationDetail, day, simulation);
-
                  simulationDetails.add(simulationDetailsToSave);
                 if(simulationDetailsToSave.getNumberOfHealthyWithoutImmunity() <= 0) {
-                    //  simulationDetailsToSave.setNumberOfHealthyWithImmunity(simulationDetailsToSave.getNumberOfHealthyWithImmunity() + simulationDetailsToSave.getNumberOfInfected());
-                    //  simulationDetailsToSave.setNumberOfInfected(0);
                     break;
                 }
             }
@@ -50,6 +51,16 @@ public class SimulationServiceImpl implements SimulationService {
         }
         return new ArrayList<>();
     }
+
+    private void additionalSecuritySettings(Simulation simulation) {
+        if(simulation.isMask()){
+            simulation.setPersonInfectPerDay(Math.round(simulation.getPersonInfectPerDay() - (simulation.getPersonInfectPerDay() * 0.15)));
+        }
+        if(simulation.isDistance()){
+            simulation.setPersonInfectPerDay(Math.round(simulation.getPersonInfectPerDay() - (simulation.getPersonInfectPerDay() * 0.20)));
+        }
+    }
+
     private SimulationDetails simulate(SimulationDetails details,int day, Simulation simulation){
         if(numberOfHealthyWithoutImmunity < simulation.getPersonInfectPerDay()){
             long currentNumberOfHealthy = simulation.getPersonInfectPerDay() - (simulation.getPersonInfectPerDay() - numberOfHealthyWithoutImmunity);
@@ -106,7 +117,9 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     @Override
-    public List<SimulationDetails> results() {
-        return new ArrayList<>();
+    public List<Simulation> results(int page) {
+        Pageable pageable = PageRequest.of(page, 25);
+        Page<Simulation> simulations = simulationRepository.findAll(pageable);
+        return new ArrayList<>(simulations.getContent());
     }
 }
