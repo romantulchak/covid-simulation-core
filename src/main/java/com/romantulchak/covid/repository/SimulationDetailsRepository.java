@@ -9,5 +9,4 @@ public interface SimulationDetailsRepository extends JpaRepository<SimulationDet
 
     List<SimulationDetails> findAllById(long id);
 
-
 }

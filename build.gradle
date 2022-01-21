@@ -15,12 +15,18 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.jetbrains:annotations:20.1.0'
-    runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.2'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.6.2'
+    implementation 'org.jetbrains:annotations:22.0.0'
+    runtimeOnly 'org.postgresql:postgresql:42.3.1'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.2'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    implementation group: 'org.modelmapper', name: 'modelmapper', version: '3.0.0'
 }
+
 
 test {
     useJUnitPlatform()
